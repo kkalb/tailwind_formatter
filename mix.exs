@@ -13,38 +13,33 @@ defmodule TailwindFormatter.MixProject do
       description: "A Mix formatter that sorts your Tailwind classes",
       deps: deps(),
       docs: docs(),
-      package: package()
+      package: package(),
+      dialyzer: dialyzer()
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
-    [
-      extra_applications: [:logger]
-    ]
+    [extra_applications: [:logger]]
   end
 
   defp docs do
-    [
-      main: "TailwindFormatter",
-      source_ref: "v#{@version}",
-      source_url: @url
-    ]
+    [main: "TailwindFormatter", source_ref: "v#{@version}", source_url: @url]
   end
 
   defp package do
-    %{
-      licenses: ["MIT"],
-      maintainers: ["100phlecs"],
-      links: %{"GitHub" => @url}
-    }
+    %{licenses: ["MIT"], maintainers: ["100phlecs"], links: %{"GitHub" => @url}}
   end
 
-  # Run "mix help deps" to learn about dependencies.
+  defp dialyzer() do
+    [plt_add_apps: [:mix]]
+  end
+
   defp deps do
     [
-      # docs
-      {:ex_doc, "~> 0.28", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
+      {:credo, "~> 1.6.7", [only: [:dev, :test], runtime: false]},
+      {:dialyxir, "~> 1.2", [only: [:dev, :test], runtime: false]},
+      {:recode, "~> 0.4", only: [:test, :ci, :dev]}
     ]
   end
 end
