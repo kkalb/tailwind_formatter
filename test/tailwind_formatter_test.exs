@@ -170,6 +170,7 @@ defmodule TailwindFormatterTest do
     input = """
     <div class="prose prose-a:text-sky-600 hover:prose-a:text-sky-300"></div>
     """
+
     expected = """
     <div class="prose prose-a:text-sky-600 hover:prose-a:text-sky-300"></div>
     """
@@ -181,13 +182,13 @@ defmodule TailwindFormatterTest do
     test "missing final quote" do
       input = ~S"""
       <a class={"#{if false, do: "bg-white"} text-sm potato sm:lowercase #{isready?(@check)} uppercase
-        id="testing 
+        id="testing
         href="#"></a>
       """
 
       expected = ~S"""
       <a class={"#{if false, do: "bg-white"} text-sm potato sm:lowercase #{isready?(@check)} uppercase
-        id="testing 
+        id="testing
         href="#"></a>
       """
 
@@ -197,13 +198,13 @@ defmodule TailwindFormatterTest do
     test "incomplete inline elixir" do
       input = ~S"""
       <a class={"#{if false, do: "bg-white" text-sm potato sm:lowercase uppercase"
-        id="testing 
+        id="testing
         href="#"></a>
       """
 
       expected = ~S"""
       <a class={"#{if false, do: "bg-white" text-sm potato sm:lowercase uppercase"
-        id="testing 
+        id="testing
         href="#"></a>
       """
 
@@ -213,17 +214,33 @@ defmodule TailwindFormatterTest do
     test "missing number tag inline elixir" do
       input = ~S"""
       <a class={"{if false, do: "bg-white"} text-sm potato sm:lowercase uppercase"}
-        id="testing 
+        id="testing
         href="#"></a>
       """
 
       expected = ~S"""
       <a class={"{if false, do: "bg-white"} text-sm potato sm:lowercase uppercase"}
-        id="testing 
+        id="testing
         href="#"></a>
       """
 
       assert_formatter_output(input, expected)
     end
+  end
+
+  test "larger css" do
+    input = ~S"""
+    <a class="bg-colorGreen-400 inline-block rounded-lg px-3 py-3 text-center text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-colorGreen-500 hover:shadow-md focus:bg-colorGreen-600 focus:ring-colorGreen-500 focus:shadow-sm focus:ring-4 focus:ring-opacity-50"
+      id="testing
+      href="#"></a>
+    """
+
+    expected = ~S"""
+    <a class="bg-colorGreen-400 inline-block rounded-lg px-3 py-3 text-center text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-colorGreen-500 hover:shadow-md focus:ring-colorGreen-500 focus:bg-colorGreen-600 focus:shadow-sm focus:ring-4 focus:ring-opacity-50"
+      id="testing
+      href="#"></a>
+    """
+
+    assert_formatter_output(input, expected)
   end
 end
