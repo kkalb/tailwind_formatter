@@ -6,6 +6,7 @@ defmodule TailwindFormatter do
              |> Enum.fetch!(1)
 
   alias TailwindFormatter.Defaults
+  alias TailwindFormatter.Sorter
 
   if Version.match?(System.version(), ">= 1.13.0") do
     @behaviour Mix.Tasks.Format
@@ -25,123 +26,56 @@ defmodule TailwindFormatter do
       needs_curlies = String.match?(class_val, ~r/{/)
 
       trimmed_classes =
-        class_val |> String.trim() |> String.trim("{") |> String.trim("}") |> String.trim("\"") |> String.trim()
+        class_val
+        |> String.trim()
+        |> String.trim("{")
+        |> String.trim("}")
+        |> String.trim("\"")
+        |> String.trim()
 
-      if trimmed_classes == "" || Regex.match?(Defaults.invalid_input_regex(), trimmed_classes) do
-        original_str
-      else
-        sorted_list = trimmed_classes |> String.split() |> sort_variant_chains() |> sort()
-        sorted_list = Enum.join([inline_elixir_functions | sorted_list], " ") |> String.trim()
-        delimiter = if String.contains?(original_str, "class:"), do: ": ", else: "="
+      invalid_regex = Regex.match?(Defaults.invalid_input_regex(), trimmed_classes)
 
-        class_attr <> delimiter <> wrap_classes(sorted_list, needs_curlies)
-      end
+      input_map = %{
+        original_str: original_str,
+        trimmed_classes: trimmed_classes,
+        inline_elixir_functions: inline_elixir_functions,
+        needs_curlies: needs_curlies,
+        class_attr: class_attr,
+        invalid_regex: invalid_regex
+      }
+
+      build_sorted_css_string(input_map)
     end)
   end
 
-  defp wrap_classes(class_list, with_curlies) do
-    if with_curlies do
-      "{\"" <> class_list <> "\"}"
+  defp build_sorted_css_string(%{trimmed_classes: "", original_str: str}), do: str
+  defp build_sorted_css_string(%{invalid_regex: true, original_str: str}), do: str
+
+  defp build_sorted_css_string(%{
+         original_str: original_str,
+         trimmed_classes: trimmed_classes,
+         inline_elixir_functions: inline_elixir_functions,
+         needs_curlies: needs_curlies,
+         class_attr: class_attr
+       }) do
+    sorted_list =
+      trimmed_classes |> String.split() |> Sorter.sort_variant_chains() |> Sorter.sort()
+
+    sorted_list = Enum.join([inline_elixir_functions | sorted_list], " ") |> String.trim()
+    wrapped_classes = wrap_classes(sorted_list, needs_curlies)
+
+    build_resulting_classes(original_str, class_attr, wrapped_classes)
+  end
+
+  defp build_resulting_classes(original_str, class_attr, wrapped_classes) do
+    if String.contains?(original_str, "class:") do
+      "#{class_attr}: #{wrapped_classes}"
     else
-      "\"" <> class_list <> "\""
+      "#{class_attr}=#{wrapped_classes}"
     end
   end
 
-  defp sort([]) do
-    []
-  end
-
-  defp sort(class_list) do
-    {base_classes, variants} = separate(class_list)
-    base_sorted = sort_base_classes(base_classes)
-    variant_sorted = sort_variant_classes(variants)
-
-    base_sorted ++ variant_sorted
-  end
-
-  defp sort_base_classes(base_classes) do
-    Enum.map(base_classes, fn class ->
-      sort_number = Map.get(Defaults.class_order(), class, -1)
-      {sort_number, class}
-    end)
-    |> Enum.sort(&(elem(&1, 0) < elem(&2, 0)))
-    |> Enum.map(&elem(&1, 1))
-    |> List.flatten()
-  end
-
-  defp separate(class_list) do
-    class_list
-    |> Enum.reduce({[], []}, fn class, tuple ->
-      if variant?(class) do
-        put_elem(tuple, 1, [class | elem(tuple, 1)])
-      else
-        put_elem(tuple, 0, [class | elem(tuple, 0)])
-      end
-    end)
-  end
-
-  defp variant?(class) do
-    String.contains?(class, ":")
-  end
-
-  defp sort_variant_classes(variants) do
-    variants
-    |> group_by_first_variant()
-    |> sort_variant_groups()
-    |> sort_classes_per_variant()
-    |> grouped_variants_to_list()
-  end
-
-  defp sort_variant_chains(variants) do
-    variants
-    |> Enum.map(&String.split(&1, ":"))
-    |> Enum.map(&sort_inverse_variant_order/1)
-    |> Enum.map(&Enum.join(&1, ":"))
-  end
-
-  defp group_by_first_variant(variants) do
-    variants
-    |> Enum.map(&String.split(&1, ":", parts: 2))
-    |> Enum.group_by(&List.first/1, &List.last/1)
-  end
-
-  defp sort_inverse_variant_order(variants) do
-    variants
-    |> Enum.map(fn variant ->
-      sort_number = Map.get(Defaults.variant_order(), variant, -1)
-      {sort_number, variant}
-    end)
-    |> Enum.sort(&(elem(&1, 0) > elem(&2, 0)))
-    |> Enum.map(&elem(&1, 1))
-  end
-
-  defp sort_variant_groups(variant_groups) do
-    variant_groups
-    |> Enum.map(fn variant_group ->
-      variant = elem(variant_group, 0)
-      sort_number = Map.get(Defaults.variant_order(), variant, -1)
-
-      {sort_number, variant_group}
-    end)
-    |> Enum.sort(&(elem(&1, 0) < elem(&2, 0)))
-    |> Enum.map(&elem(&1, 1))
-  end
-
-  defp sort_classes_per_variant(grouped_variants) do
-    Enum.map(grouped_variants, fn variant_group ->
-      {variant, classes_and_variants} = variant_group
-      {variant, sort(classes_and_variants)}
-    end)
-  end
-
-  defp grouped_variants_to_list(grouped_variants) do
-    Enum.map(grouped_variants, fn variant_group ->
-      {variant, base_classes} = variant_group
-
-      Enum.map(base_classes, fn class ->
-        "#{variant}:#{class}"
-      end)
-    end)
-    |> List.flatten()
-  end
+  @spec wrap_classes(binary, boolean()) :: binary
+  defp wrap_classes(class_list, true), do: "{\"" <> class_list <> "\"}"
+  defp wrap_classes(class_list, false), do: "\"" <> class_list <> "\""
 end
