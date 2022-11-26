@@ -243,4 +243,20 @@ defmodule TailwindFormatterTest do
 
     assert_formatter_output(input, expected)
   end
+
+  test "buggy css" do
+    input = ~S"""
+    <a class="mx-auto p-10 xs:p-0 md:w-full md:max-w-md"
+      id="testing
+      href="#"></a>
+    """
+
+    expected = ~S"""
+    <a class="mx-auto p-10 xs:p-0 md:w-full md:max-w-md"
+      id="testing
+      href="#"></a>
+    """
+
+    assert_formatter_output(input, expected)
+  end
 end
