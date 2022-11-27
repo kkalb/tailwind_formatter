@@ -39,8 +39,7 @@ defmodule TailwindFormatter.MixProject do
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:credo, "~> 1.6.7", [only: [:dev, :test], runtime: false]},
       {:dialyxir, "~> 1.2", [only: [:dev, :test], runtime: false]},
-      {:recode, "~> 0.4", only: [:test, :dev]},
-      {:phoenix_live_view, ">= 0.17.6", optional: true}
+      {:recode, "~> 0.4", only: [:test, :dev]}
     ]
   end
 end
