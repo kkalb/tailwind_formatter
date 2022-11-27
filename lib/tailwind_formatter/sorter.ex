@@ -20,7 +20,7 @@ defmodule TailwindFormatter.Sorter do
       sort_number = Map.get(Defaults.class_order(), class, -1)
       {sort_number, class}
     end)
-    |> Enum.sort(&(elem(&1, 0) < elem(&2, 0)))
+    |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
     |> Enum.map(&elem(&1, 1))
     |> List.flatten()
   end
@@ -37,9 +37,7 @@ defmodule TailwindFormatter.Sorter do
   """
   @spec separate(list) :: {list, list}
   defp separate(class_list) do
-    {f, l} = Enum.split_with(class_list, &(not variant?(&1)))
-    # TODO: delete this if not needed but for now and to not change test assertions, I keep it.
-    {Enum.reverse(f), Enum.reverse(l)}
+    Enum.split_with(class_list, &(not variant?(&1)))
   end
 
   @spec variant?(binary()) :: boolean()
@@ -76,7 +74,7 @@ defmodule TailwindFormatter.Sorter do
       sort_number = Map.get(Defaults.variant_order(), variant, -1)
       {sort_number, variant}
     end)
-    |> Enum.sort(&(elem(&1, 0) > elem(&2, 0)))
+    |> Enum.sort(&(elem(&1, 0) >= elem(&2, 0)))
     |> Enum.map(&elem(&1, 1))
   end
 
@@ -89,7 +87,7 @@ defmodule TailwindFormatter.Sorter do
 
       {sort_number, variant_group}
     end)
-    |> Enum.sort(&(elem(&1, 0) < elem(&2, 0)))
+    |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
     |> Enum.map(&elem(&1, 1))
   end
 

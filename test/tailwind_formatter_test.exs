@@ -12,14 +12,6 @@ defmodule TailwindFormatterTest do
     assert second_pass == expected
   end
 
-  def assert_formatter_doesnt_change(code, dot_formatter_opts \\ []) do
-    first_pass = TailwindFormatter.format(code, dot_formatter_opts)
-    assert first_pass == code
-
-    second_pass = TailwindFormatter.format(first_pass, dot_formatter_opts)
-    assert second_pass == code
-  end
-
   test "works" do
     input = """
     <div class="text-sm potato sm:lowercase uppercase"></div>
@@ -178,6 +170,38 @@ defmodule TailwindFormatterTest do
     assert_formatter_output(input, expected)
   end
 
+  test "larger css with unknown classes" do
+    input = ~S"""
+    <a class="bg-colorGreen-400 inline-block rounded-lg px-3 py-3 text-center text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-colorGreen-500 hover:shadow-md hover:text-lg focus:bg-colorGreen-600 focus:ring-colorGreen-500 focus:shadow-sm focus:ring-4 focus:ring-opacity-50"
+      id="testing"
+      href="#"></a>
+    """
+
+    expected = ~S"""
+    <a class="bg-colorGreen-400 inline-block rounded-lg px-3 py-3 text-center text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-colorGreen-500 hover:text-lg hover:shadow-md focus:bg-colorGreen-600 focus:ring-colorGreen-500 focus:shadow-sm focus:ring-4 focus:ring-opacity-50"
+      id="testing"
+      href="#"></a>
+    """
+
+    assert_formatter_output(input, expected)
+  end
+
+  test "larger css with known classes" do
+    input = ~S"""
+    <a class="bg-green-400 inline-block rounded-lg px-3 py-3 text-center text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-green-500 hover:shadow-md hover:text-lg focus:bg-green-600 focus:ring-green-500 focus:shadow-sm focus:ring-4 focus:ring-opacity-50"
+      id="testing"
+      href="#"></a>
+    """
+
+    expected = ~S"""
+    <a class="inline-block rounded-lg bg-green-400 px-3 py-3 text-center text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-green-500 hover:text-lg hover:shadow-md focus:bg-green-600 focus:shadow-sm focus:ring-4 focus:ring-green-500 focus:ring-opacity-50"
+      id="testing"
+      href="#"></a>
+    """
+
+    assert_formatter_output(input, expected)
+  end
+
   describe "aborts on bad input" do
     test "missing final quote" do
       input = ~S"""
@@ -190,6 +214,22 @@ defmodule TailwindFormatterTest do
       <a class={"#{if false, do: "bg-white"} text-sm potato sm:lowercase #{isready?(@check)} uppercase
         id="testing
         href="#"></a>
+      """
+
+      assert_formatter_output(input, expected)
+    end
+
+    test "custom variant does not flip" do
+      input = ~S"""
+      <a class=" p-10  mx-auto xs:p-0 md:w-full md:max-w-md"
+      id="testing
+      href="#"></a>
+      """
+
+      expected = ~S"""
+      <a class="mx-auto p-10 xs:p-0 md:w-full md:max-w-md"
+      id="testing
+      href="#"></a>
       """
 
       assert_formatter_output(input, expected)
