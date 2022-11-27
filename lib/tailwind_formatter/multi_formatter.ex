@@ -9,7 +9,8 @@ if Code.ensure_loaded?(Phoenix.LiveView.HTMLFormatter) do
     end
 
     def format(contents, opts) do
-      Phoenix.LiveView.HTMLFormatter.format(contents, opts)
+      contents
+      |> Phoenix.LiveView.HTMLFormatter.format(opts)
       |> TailwindFormatter.format(opts)
     end
   end

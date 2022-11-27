@@ -7,14 +7,10 @@ defmodule TailwindFormatter.Sorter do
 
   @spec sort(list) :: list
   def sort(class_list) do
-    IO.inspect(class_list, label: "class list")
     {base_classes, variants} = class_list |> sort_variant_chains() |> separate()
     base_sorted = sort_base_classes(base_classes)
     variant_sorted = sort_variant_classes(variants)
-
-    a = base_sorted ++ variant_sorted
-    IO.inspect(a, label: "ret")
-    a
+    base_sorted ++ variant_sorted
   end
 
   @spec sort_base_classes(list) :: list
@@ -23,7 +19,7 @@ defmodule TailwindFormatter.Sorter do
       sort_number = Map.get(Defaults.class_order(), class, -1)
       {sort_number, class}
     end)
-    |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
+    |> Enum.sort_by(&elem(&1, 0))
     |> Enum.map(&elem(&1, 1))
     |> List.flatten()
   end
@@ -74,7 +70,7 @@ defmodule TailwindFormatter.Sorter do
   defp sort_inverse_variant_order(variants) do
     variants
     |> Enum.map(&{Map.get(Defaults.variant_order(), &1, -1), &1})
-    |> Enum.sort(&(elem(&1, 0) >= elem(&2, 0)))
+    |> Enum.sort_by(&elem(&1, 0), :desc)
     |> Enum.map(&elem(&1, 1))
   end
 
@@ -82,7 +78,7 @@ defmodule TailwindFormatter.Sorter do
   defp sort_variant_groups(variant_groups) do
     variant_groups
     |> Enum.map(&{Map.get(Defaults.variant_order(), elem(&1, 0), -1), &1})
-    |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
+    |> Enum.sort_by(&elem(&1, 0))
     |> Enum.map(&elem(&1, 1))
   end
 
