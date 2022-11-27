@@ -221,7 +221,7 @@ defmodule TailwindFormatterTest do
 
     test "custom variant does not flip" do
       input = ~S"""
-      <a class=" p-10  mx-auto xs:p-0 md:w-full md:max-w-md"
+      <a class="p-10 mx-auto xs:p-0 md:w-full md:max-w-md"
       id="testing
       href="#"></a>
       """
@@ -266,38 +266,6 @@ defmodule TailwindFormatterTest do
 
       assert_formatter_output(input, expected)
     end
-  end
-
-  test "1" do
-    input = ~S"""
-    <a class="bg-colorGreen-400 inline-block rounded-lg px-3 py-3 text-center text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-colorGreen-500 hover:shadow-md focus:bg-colorGreen-600 focus:ring-colorGreen-500 focus:shadow-sm focus:ring-4 focus:ring-opacity-50"
-      id="testing
-      href="#"></a>
-    """
-
-    expected = ~S"""
-    <a class="bg-colorGreen-400 inline-block rounded-lg px-3 py-3 text-center text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-colorGreen-500 hover:shadow-md focus:ring-colorGreen-500 focus:bg-colorGreen-600 focus:shadow-sm focus:ring-4 focus:ring-opacity-50"
-      id="testing
-      href="#"></a>
-    """
-
-    assert_formatter_output(input, expected)
-  end
-
-  test "2" do
-    input = ~S"""
-    <a class="mx-auto p-10 xs:p-0 md:w-full md:max-w-md"
-      id="testing
-      href="#"></a>
-    """
-
-    expected = ~S"""
-    <a class="mx-auto p-10 xs:p-0 md:w-full md:max-w-md"
-      id="testing
-      href="#"></a>
-    """
-
-    assert_formatter_output(input, expected)
   end
 
   test "3" do
