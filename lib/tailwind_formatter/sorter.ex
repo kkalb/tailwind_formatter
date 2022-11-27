@@ -7,11 +7,14 @@ defmodule TailwindFormatter.Sorter do
 
   @spec sort(list) :: list
   def sort(class_list) do
-    {base_classes, variants} = separate(class_list)
+    IO.inspect(class_list, label: "class list")
+    {base_classes, variants} = class_list |> sort_variant_chains() |> separate()
     base_sorted = sort_base_classes(base_classes)
     variant_sorted = sort_variant_classes(variants)
 
-    base_sorted ++ variant_sorted
+    a = base_sorted ++ variant_sorted
+    IO.inspect(a, label: "ret")
+    a
   end
 
   @spec sort_base_classes(list) :: list
@@ -70,10 +73,7 @@ defmodule TailwindFormatter.Sorter do
   @spec sort_inverse_variant_order(any) :: list
   defp sort_inverse_variant_order(variants) do
     variants
-    |> Enum.map(fn variant ->
-      sort_number = Map.get(Defaults.variant_order(), variant, -1)
-      {sort_number, variant}
-    end)
+    |> Enum.map(&{Map.get(Defaults.variant_order(), &1, -1), &1})
     |> Enum.sort(&(elem(&1, 0) >= elem(&2, 0)))
     |> Enum.map(&elem(&1, 1))
   end
@@ -81,28 +81,49 @@ defmodule TailwindFormatter.Sorter do
   @spec sort_variant_groups(map()) :: list
   defp sort_variant_groups(variant_groups) do
     variant_groups
-    |> Enum.map(fn variant_group ->
-      variant = elem(variant_group, 0)
-      sort_number = Map.get(Defaults.variant_order(), variant, -1)
-
-      {sort_number, variant_group}
-    end)
+    |> Enum.map(&{Map.get(Defaults.variant_order(), elem(&1, 0), -1), &1})
     |> Enum.sort(&(elem(&1, 0) <= elem(&2, 0)))
     |> Enum.map(&elem(&1, 1))
   end
 
   @spec sort_classes_per_variant(list) :: list
   defp sort_classes_per_variant(grouped_variants) do
-    Enum.map(grouped_variants, fn {variant, classes_and_variants} ->
-      {variant, sort(classes_and_variants)}
-    end)
+    Enum.map(grouped_variants, &{elem(&1, 0), sort(elem(&1, 1))})
   end
 
+  @doc """
+  Seperates class strings with and without a colon.
+  Also, class order gets inverted, atm I do not know if this is needed.
+
+  ## Example #1
+
+  ### Input
+     [{"disabled", ["text-blue-500"]}]
+
+  ### Output
+     ["disabled:text-blue-500"]
+
+  ## Example #2
+
+  ### Input
+    [
+      {"odd", ["decoration-slate-50"]},
+      {"sm",
+      ["lowercase", "hover:bg-unknown-500", "hover:bg-gray-500",
+        "disabled:text-lg", "disabled:text-2xl"]},
+      {"lg", ["sm:dark:group-hover:disabled:text-blue-500"]}
+    ]
+
+  ### Output
+    ["odd:decoration-slate-50", "sm:lowercase", "sm:hover:bg-unknown-500",
+    "sm:hover:bg-gray-500", "sm:disabled:text-lg", "sm:disabled:text-2xl",
+    "lg:sm:dark:group-hover:disabled:text-blue-500"]
+  """
   @spec grouped_variants_to_list(list) :: list
   defp grouped_variants_to_list(grouped_variants) do
-    Enum.map(grouped_variants, fn {variant, base_classes} ->
-      Enum.map(base_classes, fn class -> "#{variant}:#{class}" end)
-    end)
+    for {variant, base_classes} <- grouped_variants do
+      Enum.map(base_classes, &"#{variant}:#{&1}")
+    end
     |> List.flatten()
   end
 end

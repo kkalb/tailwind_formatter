@@ -58,8 +58,7 @@ defmodule TailwindFormatter do
          needs_curlies: needs_curlies,
          class_attr: class_attr
        }) do
-    sorted_list =
-      trimmed_classes |> String.split() |> Sorter.sort_variant_chains() |> Sorter.sort()
+    sorted_list = trimmed_classes |> String.split() |> Sorter.sort()
 
     sorted_list = Enum.join([inline_elixir_functions | sorted_list], " ") |> String.trim()
     wrapped_classes = wrap_classes(sorted_list, needs_curlies)
