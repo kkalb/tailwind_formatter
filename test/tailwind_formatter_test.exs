@@ -228,7 +228,7 @@ defmodule TailwindFormatterTest do
     end
   end
 
-  test "larger css" do
+  test "1" do
     input = ~S"""
     <a class="bg-colorGreen-400 inline-block rounded-lg px-3 py-3 text-center text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-colorGreen-500 hover:shadow-md focus:bg-colorGreen-600 focus:ring-colorGreen-500 focus:shadow-sm focus:ring-4 focus:ring-opacity-50"
       id="testing
@@ -244,7 +244,7 @@ defmodule TailwindFormatterTest do
     assert_formatter_output(input, expected)
   end
 
-  test "buggy css" do
+  test "2" do
     input = ~S"""
     <a class="mx-auto p-10 xs:p-0 md:w-full md:max-w-md"
       id="testing
@@ -253,6 +253,40 @@ defmodule TailwindFormatterTest do
 
     expected = ~S"""
     <a class="mx-auto p-10 xs:p-0 md:w-full md:max-w-md"
+      id="testing
+      href="#"></a>
+    """
+
+    assert_formatter_output(input, expected)
+  end
+
+  test "3" do
+    input = ~S"""
+    <a class={"col-span-#{if ec_selected?, do: "3", else: "4"} mb-1"}
+      id="testing
+      href="#"></a>
+    """
+
+    expected = ~S"""
+    <a class={"mb-1 col-span-#{if ec_selected?, do: "3", else: "4"}"}
+      id="testing
+      href="#"></a>
+    """
+
+    assert_formatter_output(input, expected)
+  end
+
+  test "4" do
+    features? = true
+
+    input = ~S"""
+    <a class={"my-2 ml-1" <> if features?, do: "", else: " hidden"}
+      id="testing
+      href="#"></a>
+    """
+
+    expected = ~S"""
+    <a class={"my-2 ml-1" <> if features?, do: "", else: " hidden"}
       id="testing
       href="#"></a>
     """
