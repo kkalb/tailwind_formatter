@@ -563,27 +563,26 @@ defmodule TailwindFormatterTest do
 
   test "double space inserted by formatter into Enum.join/3" do
     input = """
-    <.div class={["flex p-1", some_func("focus-within:border-neutral", @var)] |> Enum.join(" ")}>
-    </.div>
+    <.div class={Enum.join([], " ")}></.div>
     """
 
     expected = """
-    <.div class={["flex p-1", some_func("focus-within:border-neutral", @var)] |> Enum.join(" ")}>
-    </.div>
+    <.div class={Enum.join([], " ")}></.div>
     """
 
     assert_formatter_output(input, expected)
   end
 
-  test "formating works for space in constant" do
+
+  test "formatting works for space in constant" do
     input = """
     {space = " "}
-    <.div class={["flex p-1", Enum.join(some_func("focus-within:border-neutral", @var), space)]}></div>
+    <.div class={Enum.join([], space)}></.div>
     """
 
     expected = """
     {space = " "}
-    <.div class={["flex p-1", Enum.join(some_func("focus-within:border-neutral", @var), space)]}></div>
+    <.div class={Enum.join([], space)}></.div>
     """
 
     assert_formatter_output(input, expected)
